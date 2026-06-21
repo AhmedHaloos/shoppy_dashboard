@@ -1,0 +1,24 @@
+{
+  "categories": [],
+  "subcategories": [],
+  "products": [],
+  "users": [
+    {
+      "id": "8b675fc1-aeff-485f-b0c4-8c16ac24217b",
+      "name": "ahmed",
+      "email": "ahmed.saeed.ashm93@gmail.com",
+      "phone": "01023311369",
+      "avatarUrl": "",
+      "address": {
+        "street": "",
+        "city": "",
+        "state": "",
+        "country": "",
+        "postalCode": ""
+      },
+      "walletBalance": 0
+    }
+  ],
+  "orders": [],
+  "workers": []
+}

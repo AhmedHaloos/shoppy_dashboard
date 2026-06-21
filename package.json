@@ -1,0 +1,12 @@
+{
+  "name": "users-node-website",
+  "version": "1.0.0",
+  "description": "A small Node dashboard for managing products, categories, users, orders, and delivery workers.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
