@@ -45,10 +45,18 @@ a {
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
   width: 272px;
+  height: 100vh;
   padding: 22px 16px;
   background: var(--sidebar);
   color: #ffffff;
+  overflow-y: auto;
+}
+
+.logout-form {
+  margin-top: auto;
 }
 
 .brand {
@@ -118,6 +126,11 @@ a {
   border-radius: 8px;
 }
 
+.tabs a span .icon {
+  width: 17px;
+  height: 17px;
+}
+
 .tabs a:hover,
 .tabs a.active {
   background: #ffffff;
@@ -128,6 +141,75 @@ a {
 .tabs a.active span {
   background: var(--primary);
   color: #ffffff;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.logout-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.session-email {
+  padding: 0 4px;
+  color: var(--sidebar-muted);
+  font-size: 12px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-outline-dark {
+  display: flex;
+  gap: 8px;
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.btn-outline-dark:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Collapsible "Add" panels */
+details.add-panel summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 800;
+  font-size: 17px;
+}
+
+details.add-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+details.add-panel summary > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+details.add-panel .chevron {
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+details.add-panel[open] .chevron {
+  transform: rotate(180deg);
+}
+
+details.add-panel form {
+  margin-top: 18px;
 }
 
 .workspace {
@@ -218,6 +300,23 @@ h2 {
   inset: 0 auto 0 0;
   width: 4px;
   background: linear-gradient(180deg, var(--primary), var(--accent));
+}
+
+.stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: var(--surface-alt);
+  color: var(--primary);
+}
+
+.stat-icon .icon {
+  width: 18px;
+  height: 18px;
 }
 
 .stats strong {
@@ -480,19 +579,24 @@ td a {
   text-transform: capitalize;
 }
 
-.badge-order-pending,
-.badge-worker-busy {
+.badge-order-pending {
   background: rgba(245, 158, 11, 0.14);
   color: #b45309;
 }
 
-.badge-order-processing {
+.badge-order-confirmed {
   background: rgba(14, 165, 233, 0.14);
   color: #0369a1;
 }
 
-.badge-order-outfordelivery {
-  background: rgba(201, 168, 76, 0.18);
+.badge-order-assigned {
+  background: rgba(46, 145, 102, 0.16);
+  color: var(--primary-dark);
+}
+
+.badge-order-indelivery,
+.badge-worker-indelivery {
+  background: rgba(201, 168, 76, 0.2);
   color: #8a6d1f;
 }
 
@@ -507,11 +611,6 @@ td a {
 .badge-stock-outofstock {
   background: rgba(220, 53, 69, 0.12);
   color: var(--danger-dark);
-}
-
-.badge-stock-lowstock {
-  background: rgba(245, 158, 11, 0.14);
-  color: #b45309;
 }
 
 .badge-worker-offline {
@@ -557,6 +656,52 @@ td a {
 
 .danger-zone p {
   margin: 0 0 14px;
+}
+
+/* Login page */
+.login-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 32px;
+  border: 1.5px solid rgba(27, 107, 74, 0.1);
+  border-radius: 20px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.login-brand {
+  justify-content: center;
+  margin-bottom: 26px;
+  padding: 0;
+}
+
+.login-brand .brand-mark {
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+}
+
+.login-brand .brand-text strong,
+.login-brand .brand-text small {
+  color: var(--text);
+}
+
+.login-brand .brand-text small {
+  color: var(--muted);
+}
+
+.message-error {
+  border-color: rgba(220, 53, 69, 0.25);
+  background: rgba(220, 53, 69, 0.08);
+  color: var(--danger-dark);
 }
 
 @media (max-width: 1200px) {
