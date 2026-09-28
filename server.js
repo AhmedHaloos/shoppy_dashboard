@@ -392,10 +392,23 @@ function options(items, selectedId, placeholder = "Choose one") {
 }
 
 function rowActions(resource, item) {
-  return `<form class="inline-actions" method="post" action="/${resource}/delete">
+  return `<form class="inline-actions" method="post" action="/${resource}/delete" onsubmit="return confirm('Delete this item? This cannot be undone.')">
     <input type="hidden" name="id" value="${escapeHtml(item.id)}">
     <button class="danger" type="submit" title="Delete">Delete</button>
   </form>`;
+}
+
+function badge(kind, status) {
+  const key = String(status || "").toLowerCase().replaceAll(/[^a-z0-9]/g, "");
+  return `<span class="badge badge-${escapeHtml(kind)}-${escapeHtml(key)}">${escapeHtml(status)}</span>`;
+}
+
+function avatar(url, name, large = false) {
+  if (url) {
+    return `<img class="avatar-img${large ? " avatar-lg" : ""}" src="${escapeHtml(url)}" alt="${escapeHtml(name)}">`;
+  }
+  const initials = clean(name).slice(0, 1).toUpperCase() || "?";
+  return `<span class="avatar-fallback${large ? " avatar-lg" : ""}">${escapeHtml(initials)}</span>`;
 }
 
 function layout({ activeTab, message = "", body }) {
@@ -409,18 +422,21 @@ function layout({ activeTab, message = "", body }) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Store Dashboard</title>
+  <title>Shoppy Admin</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <aside class="sidebar">
-    <a class="brand" href="/"><span>SD</span><strong>Store Dashboard</strong></a>
+    <a class="brand" href="/">
+      <span class="brand-mark">S</span>
+      <span class="brand-text"><strong>Shoppy</strong><small>Admin Dashboard</small></span>
+    </a>
     <nav class="tabs">${nav}</nav>
   </aside>
   <main class="workspace">
     <header class="topbar">
       <div>
-        <p class="eyebrow">Firestore Admin</p>
+        <p class="eyebrow">Shoppy Admin</p>
         <h1>${escapeHtml(activeLabel)}</h1>
       </div>
       <div class="status-pill">${usesFirestore() ? "Firestore connected" : "Local JSON mode"}</div>
@@ -551,7 +567,7 @@ function productsTab(db) {
         <td>${escapeHtml(getName(db.categories, product.categoryId))}</td>
         <td>${escapeHtml(getName(db.subcategories, product.subcategoryId))}</td>
         <td>${money(product.price)}</td>
-        <td>${escapeHtml(product.stockStatus)}</td>
+        <td>${badge("stock", product.stockStatus)}</td>
         <td>${product.availablePieces ?? ""}</td>
         <td>${product.rating ?? ""}</td>
         <td>${escapeHtml(product.reviewCount)}</td>
@@ -605,25 +621,17 @@ function usersTab(db) {
   const rows = db.users
     .map(
       (user) => `<tr>
-        <td>${escapeHtml(user.name)}</td>
+        <td>
+          <a class="user-link" href="/users/${encodeURIComponent(user.id)}">
+            ${avatar(user.avatarUrl, user.name)}
+            <span>${escapeHtml(user.name) || "Unnamed"}</span>
+          </a>
+        </td>
         <td>${escapeHtml(user.email)}</td>
         <td>${escapeHtml(user.phone)}</td>
-        <td>${user.avatarUrl ? `<a href="${escapeHtml(user.avatarUrl)}" target="_blank">Avatar</a>` : ""}</td>
-        <td>${escapeHtml(fullAddress(user.address))}</td>
+        <td>${escapeHtml(fullAddress(user.address)) || "—"}</td>
         <td>${money(user.walletBalance)}</td>
-        <td>
-          <form class="row-form entity" method="post" action="/users/update">
-            <input type="hidden" name="id" value="${escapeHtml(user.id)}">
-            <input name="name" value="${escapeHtml(user.name)}" required>
-            <input name="email" type="email" value="${escapeHtml(user.email)}" required>
-            <input name="phone" value="${escapeHtml(user.phone)}">
-            <input name="avatarUrl" value="${escapeHtml(user.avatarUrl)}" placeholder="Avatar URL">
-            ${addressFields("address", user.address)}
-            <input name="walletBalance" type="number" min="0" step="0.01" value="${escapeHtml(user.walletBalance)}" placeholder="Wallet">
-            <button type="submit">Update</button>
-          </form>
-        </td>
-        <td>${rowActions("users", user)}</td>
+        <td><a class="btn-outline" href="/users/${encodeURIComponent(user.id)}">View</a></td>
       </tr>`
     )
     .join("");
@@ -641,7 +649,39 @@ function usersTab(db) {
         <button type="submit">Add user</button>
       </form>
     </section>
-    ${tablePanel("Users", ["Name", "Email", "Phone", "Avatar", "Address", "Wallet", "Edit", ""], rows)}`;
+    ${tablePanel("Users", ["User", "Email", "Phone", "Address", "Wallet", ""], rows)}`;
+}
+
+function userDetailPage(user, message = "") {
+  return `<a class="back-link" href="/?tab=users">&larr; Back to users</a>
+    ${message ? `<p class="message">${escapeHtml(message)}</p>` : ""}
+    <section class="panel detail-panel">
+      <div class="detail-header">
+        ${avatar(user.avatarUrl, user.name, true)}
+        <div>
+          <h2>${escapeHtml(user.name) || "Unnamed user"}</h2>
+          <p class="muted">${escapeHtml(user.email) || "No email on file"}</p>
+        </div>
+      </div>
+      <form class="form-grid" method="post" action="/users/update">
+        <input type="hidden" name="id" value="${escapeHtml(user.id)}">
+        ${field("Name", "name", user.name, "required")}
+        ${field("Email", "email", user.email, "type=\"email\" required")}
+        ${field("Phone", "phone", user.phone)}
+        ${field("Avatar URL", "avatarUrl", user.avatarUrl)}
+        ${addressFields("address", user.address)}
+        ${field("Wallet balance", "walletBalance", user.walletBalance, "type=\"number\" min=\"0\" step=\"0.01\"")}
+        <button type="submit">Save changes</button>
+      </form>
+    </section>
+    <section class="panel danger-zone">
+      <h2>Danger zone</h2>
+      <p class="muted">Deleting a user removes their record permanently. This cannot be undone.</p>
+      <form method="post" action="/users/delete" onsubmit="return confirm('Delete this user? This cannot be undone.')">
+        <input type="hidden" name="id" value="${escapeHtml(user.id)}">
+        <button class="danger" type="submit">Delete user</button>
+      </form>
+    </section>`;
 }
 
 function ordersTab(db) {
@@ -656,7 +696,7 @@ function ordersTab(db) {
         <td>${escapeHtml(order.userName || getName(db.users, order.userId, "Guest"))}</td>
         <td>${escapeHtml(firstItem.product?.name || getName(db.products, productId, "No product"))} x ${escapeHtml(quantity)}</td>
         <td>${escapeHtml(getName(db.workers, order.assignedWorkerId, "Not assigned"))}</td>
-        <td>${escapeHtml(order.status)}</td>
+        <td>${badge("order", order.status)}</td>
         <td>${escapeHtml(order.paymentMethod)}</td>
         <td>${money(order.total)}</td>
         <td>${escapeHtml(fullAddress(order.deliveryAddress))}</td>
@@ -711,7 +751,7 @@ function workersTab(db) {
         <td>${escapeHtml(worker.name)}</td>
         <td>${escapeHtml(worker.email)}</td>
         <td>${escapeHtml(worker.phone)}</td>
-        <td>${escapeHtml(worker.status)}</td>
+        <td>${badge("worker", worker.status)}</td>
         <td>${escapeHtml(worker.vehicleType)}</td>
         <td>${escapeHtml(worker.vehiclePlate)}</td>
         <td>${money(worker.totalEarnings)}</td>
@@ -903,12 +943,12 @@ function deleteItem(db, collection, id) {
   db[collection] = db[collection].filter((item) => item.id !== id);
 }
 
-async function mutate(req, res, collection, tab, handlers) {
+async function mutate(req, res, collection, tab, handlers, buildRedirect) {
   const form = await parseBody(req);
   const db = await readDb();
   handlers[collection](db, form);
   await writeDb(db);
-  redirect(res, `/?tab=${tab}&message=Saved`);
+  redirect(res, buildRedirect ? buildRedirect(form) : `/?tab=${tab}&message=Saved`);
 }
 
 async function serveStatic(req, res) {
@@ -941,6 +981,25 @@ async function handleRequest(req, res) {
     }[activeTab](db);
 
     return sendHtml(res, layout({ activeTab, message: url.searchParams.get("message") || "", body }));
+  }
+
+  if (req.method === "GET") {
+    const segments = url.pathname.split("/").filter(Boolean);
+    if (segments[0] === "users" && segments.length === 2) {
+      const db = await readDb();
+      const user = db.users.find((item) => item.id === segments[1]);
+      if (!user) {
+        return sendHtml(
+          res,
+          layout({
+            activeTab: "users",
+            body: `<a class="back-link" href="/?tab=users">&larr; Back to users</a><section class="panel"><h2>User not found</h2><p class="muted">It may have already been deleted.</p></section>`
+          }),
+          404
+        );
+      }
+      return sendHtml(res, layout({ activeTab: "users", body: userDetailPage(user, url.searchParams.get("message") || "") }));
+    }
   }
 
   if (req.method === "POST") {
@@ -1001,7 +1060,12 @@ async function handleRequest(req, res) {
         }
       };
 
-      return mutate(req, res, collection, tabByResource[resource], handlers);
+      const buildRedirect =
+        resource === "users" && action === "update"
+          ? (form) => `/users/${encodeURIComponent(clean(form.id))}?message=Saved`
+          : undefined;
+
+      return mutate(req, res, collection, tabByResource[resource], handlers, buildRedirect);
     }
   }
 
